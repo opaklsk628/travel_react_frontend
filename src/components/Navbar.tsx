@@ -1,35 +1,45 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
-  const isLoggedIn = false;
-  const isOperator = false;
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
   
   const handleLogout = () => {
+    logout();
     navigate('/');
   };
   
   return (
-    <nav className="navbar">
-      <div className="logo">
+    <nav>
+      <div>
         <Link to="/">Wanderlust Travel</Link>
       </div>
       
-      <div className="nav-links">
+      <div>
         <Link to="/hotels">Hotels</Link>
         
-        {isLoggedIn ? (
+        {isAuthenticated ? (
           <>
-            <Link to="/profile">My Profile</Link>
-            {isOperator && <Link to="/operator">Dashboard</Link>}
-            <button onClick={handleLogout}>Logout</button>
+            <Link to="/favorites">Favorites</Link>
+            
+            {user?.role === 'operator' && (
+              <Link to="/operator/dashboard">Dashboard</Link>
+            )}
+            
+            <div>
+              <span>{user?.username || 'Account'}</span>
+              <Link to="/profile">Profile</Link>
+              <Link to="/messages">Messages</Link>
+              <button onClick={handleLogout}>Logout</button>
+            </div>
           </>
         ) : (
-          <>
+          <div>
             <Link to="/login">Login</Link>
             <Link to="/register">Register</Link>
-          </>
+          </div>
         )}
       </div>
     </nav>

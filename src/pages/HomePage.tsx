@@ -3,17 +3,28 @@ import { Link } from 'react-router-dom';
 
 const HomePage: React.FC = () => {
   return (
-    <div className="home-page">
-      <h1>Welcome to Wanderlust Travel</h1>
-      <p>Find your perfect getaway destination</p>
+    <div>
+      <div>
+        <h1>Find Your Perfect Getaway</h1>
+        <p>Discover amazing places to stay around the world.</p>
+        <Link to="/hotels">Browse Hotels</Link>
+      </div>
       
-      <div className="cta-buttons">
-        <Link to="/hotels" className="cta-button">
-          Browse Hotels
-        </Link>
-        <Link to="/register" className="cta-button secondary">
-          Sign Up
-        </Link>
+      <div>
+        <div>
+          <h2>Unique Selection</h2>
+          <p>Discover handpicked hotels that offer exceptional experiences.</p>
+        </div>
+        
+        <div>
+          <h2>Best Prices</h2>
+          <p>Find the best deals and offers for your dream vacation.</p>
+        </div>
+        
+        <div>
+          <h2>Secure Booking</h2>
+          <p>Book with confidence knowing your information is protected.</p>
+        </div>
       </div>
     </div>
   );

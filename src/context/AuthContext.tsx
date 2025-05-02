@@ -17,6 +17,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isOperator: boolean;
+  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,21 +27,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // check the user token
+  // check user authentication status
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          setIsLoading(true);
-          const response = await authService.getProfile();
-          setUser(response.data);
-        } catch (err) {
-          localStorage.removeItem('token');
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        setIsLoading(true);
+        const response = await authService.getProfile();
+        setUser(response.data);
+      } catch (err) {
+        console.error("Authentication check failed:", err);
+        localStorage.removeItem('token');
+      } finally {
         setIsLoading(false);
       }
     };
@@ -48,32 +51,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
   
-  // login function
+  // login
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const response = await authService.login({ email, password });
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
       throw err;
     } finally {
       setIsLoading(false);
     }
   };
   
-  // register account
+  // register
   const register = async (data: any) => {
     try {
       setIsLoading(true);
       setError(null);
+      
       const response = await authService.register(data);
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
       throw err;
     } finally {
       setIsLoading(false);
@@ -86,6 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
   };
   
+  const clearError = () => {
+    setError(null);
+  };
+  
   const value = {
     user,
     isLoading,
@@ -95,6 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout,
     isAuthenticated: !!user,
     isOperator: user?.role === 'operator',
+    clearError
   };
   
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
