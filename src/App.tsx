@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import './App.css';
 
-// 導入頁面組件
 import HomePage from './pages/HomePage';
 import HotelListPage from './pages/HotelListPage';
 import HotelDetailPage from './pages/HotelDetailPage';
@@ -15,7 +14,6 @@ import FavoritesPage from './pages/FavoritesPage';
 import MessagesPage from './pages/MessagesPage';
 import NotFoundPage from './pages/NotFoundPage';
 
-// 認證上下文提供者 (我們稍後會創建這個)
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
@@ -43,7 +41,7 @@ function App() {
               <Route path="/operator/hotels" element={<OperatorDashboard />} />
               <Route path="/operator/messages" element={<OperatorDashboard />} />
               
-              {/*404 error page*/}
+              {/* 404 error page*/}
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
