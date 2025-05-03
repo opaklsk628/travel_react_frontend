@@ -1,119 +1,122 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { authService } from '../services/api';
 
-interface User {
-  id: string;
-  username: string;
+export type Role = 'customer' | 'operator' | 'admin' | null;
+interface UserInfo {
   email: string;
-  role: 'operator' | 'customer' | 'admin';
+  username?: string;
+  role?: Role;
 }
 
-interface AuthContextType {
-  user: User | null;
+export interface AuthContextType {
+  token: string | null;
+  role: Role;
+  user: UserInfo | null;
+
+  isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
-  isAuthenticated: boolean;
-  isOperator: boolean;
   clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  // check user authentication status
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [token, setToken] = useState<string | null>(null);
+  const [role, setRole]   = useState<Role>(null);
+  const [user, setUser]   = useState<UserInfo | null>(null);
+
+  const [isLoading, setLoading] = useState(false);
+  const [error, setError]       = useState<string | null>(null);
+
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-      
-      try {
-        setIsLoading(true);
-        const response = await authService.getProfile();
-        setUser(response.data);
-      } catch (err) {
-        console.error("Authentication check failed:", err);
-        localStorage.removeItem('token');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    checkAuth();
+    const tk = localStorage.getItem('token');
+    const rl = localStorage.getItem('role') as Role | null;
+    const em = localStorage.getItem('email');
+    const un = localStorage.getItem('username');
+    if (tk) setToken(tk);
+    if (rl) setRole(rl);
+    if (em) setUser({ email: em, username: un || undefined, role: rl });
   }, []);
-  
-  // login
+
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
       setError(null);
-      
-      const response = await authService.login({ email, password });
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
+
+      const res = await authService.login({ email, password });
+      const { token: jwt, user } = res.data;
+
+      setToken(jwt);
+      setRole(user.role);
+      setUser({ email: user.email, username: user.username, role: user.role });
+
+      localStorage.setItem('token', jwt);
+      localStorage.setItem('role', user.role ?? '');
+      localStorage.setItem('email', user.email);
+      localStorage.setItem('username', user.username ?? '');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      setError(err?.response?.data?.message || 'Login failed');
       throw err;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-  
-  // register
+
   const register = async (data: any) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
       setError(null);
-      
-      const response = await authService.register(data);
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
+      await authService.register(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err?.response?.data?.message || 'Register failed');
       throw err;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-  
-  // logout
+
   const logout = () => {
-    localStorage.removeItem('token');
+    setToken(null);
+    setRole(null);
     setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('email');
+    localStorage.removeItem('username');
   };
-  
-  const clearError = () => {
-    setError(null);
-  };
-  
-  const value = {
+
+  const clearError = () => setError(null);
+
+  const value: AuthContextType = {
+    token,
+    role,
     user,
+    isAuthenticated: Boolean(token),
     isLoading,
     error,
+
     login,
     register,
     logout,
-    isAuthenticated: !!user,
-    isOperator: user?.role === 'operator',
-    clearError
+    clearError,
   };
-  
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 };

@@ -3,45 +3,46 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, role, logout } = useAuth();
   const navigate = useNavigate();
-  
+
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/login');
   };
-  
+
   return (
-    <nav>
-      <div>
-        <Link to="/">Wanderlust Travel</Link>
-      </div>
-      
-      <div>
-        <Link to="/hotels">Hotels</Link>
-        
-        {isAuthenticated ? (
-          <>
-            <Link to="/favorites">Favorites</Link>
-            
-            {user?.role === 'operator' && (
-              <Link to="/operator/dashboard">Dashboard</Link>
-            )}
-            
-            <div>
-              <span>{user?.username || 'Account'}</span>
-              <Link to="/profile">Profile</Link>
-              <Link to="/messages">Messages</Link>
-              <button onClick={handleLogout}>Logout</button>
-            </div>
-          </>
-        ) : (
-          <div>
-            <Link to="/login">Login</Link>
-            <Link to="/register">Register</Link>
+    <nav style={{ display: 'flex', gap: '1rem', padding: '1rem', background: '#eee' }}>
+      <Link to="/">Home</Link>
+      <Link to="/hotels">Hotels</Link>
+
+      {isAuthenticated && (
+        <>
+          <Link to="/favorites">Favorites</Link>
+
+          {role === 'operator' && (
+            <Link to="/operator/dashboard">Dashboard</Link>
+          )}
+
+          {role === 'admin' && (
+            <Link to="/admin">Admin</Link>
+          )}
+
+          <div style={{ marginLeft: 'auto' }}>
+            <span style={{ marginRight: '0.5rem' }}>
+              {user?.username ?? user?.email ?? 'Account'}
+            </span>
+            <button onClick={handleLogout}>Logout</button>
           </div>
-        )}
-      </div>
+        </>
+      )}
+
+      {!isAuthenticated && (
+        <div style={{ marginLeft: 'auto' }}>
+          <Link to="/login">Login</Link>
+          <Link to="/register" style={{ marginLeft: '0.5rem' }}>Register</Link>
+        </div>
+      )}
     </nav>
   );
 };
