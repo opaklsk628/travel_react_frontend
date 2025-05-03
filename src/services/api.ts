@@ -54,6 +54,12 @@ export const messageService = {
   delete: (id: string)           => api.delete(`/messages/${id}`),
 };
 
+// Hotelbeds API
+export const extHotelService = {
+  list: (params?: { from?: number; to?: number; lang?: string }) =>
+    api.get('/hb/hotels', { params }),
+};
+
 //Admin
 export const adminService = {
   //取得所有使用者（需要 admin JWT）

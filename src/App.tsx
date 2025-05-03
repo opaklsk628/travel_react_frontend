@@ -5,17 +5,21 @@ import {
   Route,
   Navigate,
 } from 'react-router-dom';
+
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-import HomePage        from './pages/HomePage';
-import HotelListPage   from './pages/HotelListPage';
-import HotelDetailPage from './pages/HotelDetailPage';
-import RegisterPage    from './pages/RegisterPage';
-import LoginPage       from './pages/LoginPage';
-import FavoritesPage   from './pages/FavoritesPage';
-import AdminDashboard  from './pages/AdminDashboard';
+// pages
+import HomePage          from './pages/HomePage';
+import HotelListPage     from './pages/HotelListPage';
+import HotelDetailPage   from './pages/HotelDetailPage';
+import RegisterPage      from './pages/RegisterPage';
+import LoginPage         from './pages/LoginPage';
+import FavoritesPage     from './pages/FavoritesPage';
+import AdminDashboard    from './pages/AdminDashboard';
+import HotelbedsPage     from './pages/HotelbedsPage';
 
-import Header from './components/layout/Header';
+// share ui
+import Header            from './components/layout/Header';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -35,13 +39,14 @@ export default function App() {
         <Header />
 
         <Routes>
-          <Route path="/"           element={<HomePage />} />
-          <Route path="/hotels"     element={<HotelListPage />} />
-          <Route path="/hotels/:id" element={<HotelDetailPage />} />
+          <Route path="/"            element={<HomePage />} />
+          <Route path="/hotels"      element={<HotelListPage />} />
+          <Route path="/hotels/:id"  element={<HotelDetailPage />} />
+          <Route path="/hotels/external" element={<HotelbedsPage />} />
+          <Route path="/register"    element={<RegisterPage />} />
+          <Route path="/login"       element={<LoginPage />} />
 
-          <Route path="/register"   element={<RegisterPage />} />
-          <Route path="/login"      element={<LoginPage />} />
-
+          {/* require login */}
           <Route
             path="/favorites"
             element={
@@ -51,6 +56,7 @@ export default function App() {
             }
           />
 
+          {/* Admin page */}
           <Route
             path="/admin"
             element={
@@ -60,6 +66,7 @@ export default function App() {
             }
           />
 
+          {/* unknow route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
