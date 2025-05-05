@@ -1,8 +1,7 @@
-/* src/pages/AmadeusHotelsPage.tsx */
 import React, { useEffect, useState } from 'react';
 import { amadeusService } from '../services/api';
 
-/* ---------- 型別 ---------- */
+// catalog
 interface HotelItem {
   id: string;
   name: string;
@@ -16,7 +15,6 @@ interface CityItem {
   address?: { countryName?: string };
 }
 
-/* ---------- 自訂 debounce ---------- */
 function useDebounce<T>(value: T, delay = 400) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -26,7 +24,7 @@ function useDebounce<T>(value: T, delay = 400) {
   return debounced;
 }
 
-/* ---------- 主頁面 ---------- */
+// homepage
 export default function AmadeusHotelsPage() {
   const [keyword, setKeyword] = useState('');
   const [cities, setCities] = useState<CityItem[]>([]);
@@ -36,7 +34,7 @@ export default function AmadeusHotelsPage() {
 
   const debounced = useDebounce(keyword);
 
-  /* ── 1) 監聽關鍵字，自動查城市 ── */
+  // check the city name in search box
   useEffect(() => {
     if (!debounced) {
       setCities([]);
@@ -48,7 +46,7 @@ export default function AmadeusHotelsPage() {
       .catch(() => setCities([]));
   }, [debounced]);
 
-  /* ── 2) 查飯店清單 ── */
+  // hotel list
   const fetchHotels = (cityCode: string) => {
     setLoading(true);
     setError(null);
@@ -61,17 +59,17 @@ export default function AmadeusHotelsPage() {
       .finally(() => setLoading(false));
   };
 
-  /* 預設先查 PAR (巴黎) */
+  // default hotel in Paris (PAR)
   useEffect(() => {
     fetchHotels('PAR');
   }, []);
 
-  /* ---------- UI ---------- */
+  // UI
   return (
     <div style={{ padding: '1rem' }}>
       <h2>Amadeus — Hotel Search</h2>
 
-      {/* 搜尋框 + 建議清單 */}
+      {/* search hotel and suggest list */}
       <div style={{ position: 'relative', maxWidth: 300 }}>
         <input
           type="text"
@@ -115,10 +113,10 @@ export default function AmadeusHotelsPage() {
         )}
       </div>
 
-      {/* 錯誤訊息 */}
+      {/* error message */}
       {error && <p style={{ color: 'red' }}>{error}</p>}
 
-      {/* 飯店表格 */}
+      {/* hotel list */}
       {loading ? (
         <p>Loading hotels…</p>
       ) : (

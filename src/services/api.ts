@@ -9,7 +9,6 @@ const api = axios.create({
   },
 });
 
-// 自動附帶 JWT（若 localStorage 有 token）
 api.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token');
