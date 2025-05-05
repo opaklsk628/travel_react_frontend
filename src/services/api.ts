@@ -56,7 +56,8 @@ export const messageService = {
 
 // Amadeus API
 export const amadeusService = {
-  list: (city = 'PAR') => api.get('/amadeus/hotels', { params: { city } }),
+  list:  (city = 'PAR')     => api.get('/amadeus/hotels', { params: { city } }),
+  cities:(keyword: string)  => api.get('/amadeus/cities', { params: { keyword } }),
 };
 //Admin
 export const adminService = {
