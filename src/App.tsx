@@ -1,10 +1,6 @@
-import React from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import HomePage          from './pages/HomePage';
@@ -16,8 +12,9 @@ import FavoritesPage     from './pages/FavoritesPage';
 import AdminDashboard    from './pages/AdminDashboard';
 import AmadeusHotelsPage from './pages/AmadeusHotelsPage';
 import Header            from './components/layout/Header';
+import DateFilters       from './components/DateFilters';
 
-// permissions
+/* 權限包裹 */
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
@@ -29,21 +26,32 @@ function RequireAdmin({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  /* 日期 State 置於根節點 */
+  const [checkIn,  setCheckIn]  = useState(dayjs());
+  const [checkOut, setCheckOut] = useState(dayjs().add(1, 'day'));
+
   return (
     <AuthProvider>
       <Router>
         <Header />
+        <DateFilters
+          checkIn={checkIn}
+          checkOut={checkOut}
+          setCheckIn={setCheckIn}
+          setCheckOut={setCheckOut}
+        />
 
         <Routes>
           <Route path="/"            element={<HomePage />} />
           <Route path="/hotels"      element={<HotelListPage />} />
           <Route path="/hotels/:id"  element={<HotelDetailPage />} />
+          <Route
+            path="/hotels/external"
+            element={<AmadeusHotelsPage checkIn={checkIn} checkOut={checkOut} />}
+          />
 
-          {/* Amadeus API hotel list*/}
-          <Route path="/hotels/external" element={<AmadeusHotelsPage />} />
-
-          <Route path="/register"   element={<RegisterPage />} />
-          <Route path="/login"      element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login"    element={<LoginPage />} />
 
           <Route
             path="/favorites"
@@ -53,7 +61,6 @@ export default function App() {
               </RequireAuth>
             }
           />
-
           <Route
             path="/admin"
             element={
@@ -62,7 +69,6 @@ export default function App() {
               </RequireAdmin>
             }
           />
-
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>

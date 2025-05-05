@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  TextField,
+  List,
+  ListItemText,
+  CircularProgress,
+  Typography,
+  Paper,
+  ListItemButton,
+} from '@mui/material';
 import { amadeusService } from '../services/api';
+import { Dayjs } from 'dayjs';
 
-// catalog
+/* 型別 */
 interface HotelItem {
   id: string;
   name: string;
@@ -15,6 +26,7 @@ interface CityItem {
   address?: { countryName?: string };
 }
 
+/* debounce hook */
 function useDebounce<T>(value: T, delay = 400) {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -24,106 +36,116 @@ function useDebounce<T>(value: T, delay = 400) {
   return debounced;
 }
 
-// homepage
-export default function AmadeusHotelsPage() {
+interface Props {
+  checkIn: Dayjs;
+  checkOut: Dayjs;
+}
+
+export default function AmadeusHotelsPage({ checkIn, checkOut }: Props) {
   const [keyword, setKeyword] = useState('');
-  const [cities, setCities] = useState<CityItem[]>([]);
+  const [cityOptions, setCityOptions] = useState<CityItem[]>([]);
   const [hotels, setHotels] = useState<HotelItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const debounced = useDebounce(keyword);
 
-  // check the city name in search box
+  /* 城市 autocomplete */
   useEffect(() => {
     if (!debounced) {
-      setCities([]);
+      setCityOptions([]);
       return;
     }
     amadeusService
       .cities(debounced)
-      .then(r => setCities(r.data.slice(0, 8))) // 取前 8 筆候選
-      .catch(() => setCities([]));
+      .then(res => setCityOptions(res.data.slice(0, 8)))
+      .catch(() => setCityOptions([]));
   }, [debounced]);
 
-  // hotel list
+  /* 取飯店 */
   const fetchHotels = (cityCode: string) => {
     setLoading(true);
     setError(null);
     amadeusService
       .list(cityCode)
-      .then(r => setHotels(r.data))
+      .then(res => setHotels(res.data))
       .catch(err =>
         setError(err.response?.data?.message || err.message || 'error')
       )
       .finally(() => setLoading(false));
   };
 
-  // default hotel in Paris (PAR)
   useEffect(() => {
     fetchHotels('PAR');
   }, []);
 
-  // UI
   return (
-    <div style={{ padding: '1rem' }}>
-      <h2>Amadeus — Hotel Search</h2>
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h5" mb={2}>
+        Amadeus — Hotel Search
+      </Typography>
 
-      {/* search hotel and suggest list */}
-      <div style={{ position: 'relative', maxWidth: 300 }}>
-        <input
-          type="text"
-          placeholder="Type city name…"
+      {/* 搜尋框 */}
+      <Box sx={{ position: 'relative', maxWidth: 320 }}>
+        <TextField
+          fullWidth
+          label="Search city"
           value={keyword}
           onChange={e => setKeyword(e.target.value)}
-          style={{ width: '100%', padding: 8 }}
         />
-        {cities.length > 0 && (
-          <ul
-            style={{
-              listStyle: 'none',
-              margin: 0,
-              padding: 0,
+        {!!cityOptions.length && (
+          <Paper
+            elevation={3}
+            sx={{
               position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              border: '1px solid #ccc',
-              background: '#fff',
+              width: '100%',
               zIndex: 10,
-              maxHeight: 200,
+              mt: 0.5,
+              maxHeight: 240,
               overflowY: 'auto',
             }}
           >
-            {cities.map(c => (
-              <li
-                key={c.iataCode}
-                style={{ padding: '4px 8px', cursor: 'pointer' }}
-                onClick={() => {
-                  setKeyword(`${c.name} (${c.iataCode})`);
-                  setCities([]);
-                  fetchHotels(c.iataCode);
-                }}
-              >
-                {c.name} ({c.iataCode}) {c.address?.countryName && '— '}
-                {c.address?.countryName}
-              </li>
-            ))}
-          </ul>
+            <List dense>
+              {cityOptions.map(c => (
+                <ListItemButton
+                  key={c.iataCode}
+                  onClick={() => {
+                    setKeyword(`${c.name} (${c.iataCode})`);
+                    setCityOptions([]);
+                    fetchHotels(c.iataCode);
+                  }}
+                >
+                  <ListItemText
+                    primary={`${c.name} (${c.iataCode})`}
+                    secondary={c.address?.countryName}
+                  />
+                </ListItemButton>
+              ))}
+            </List>
+          </Paper>
         )}
-      </div>
+      </Box>
 
-      {/* error message */}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && (
+        <Typography color="error" mt={2}>
+          {error}
+        </Typography>
+      )}
 
-      {/* hotel list */}
+      {/* 飯店表格 */}
       {loading ? (
-        <p>Loading hotels…</p>
+        <Box sx={{ mt: 3 }}>
+          <CircularProgress />
+        </Box>
       ) : (
-        <table
-          border={1}
-          cellPadding={6}
-          style={{ borderCollapse: 'collapse', marginTop: '1rem', width: '100%' }}
+        <Box
+          component="table"
+          sx={{
+            mt: 3,
+            borderCollapse: 'collapse',
+            width: '100%',
+            '& th, & td': { border: '1px solid #ccc', p: 1 },
+          }}
         >
           <thead>
             <tr>
@@ -138,7 +160,11 @@ export default function AmadeusHotelsPage() {
               <tr key={h.id}>
                 <td>
                   {h.image ? (
-                    <img src={h.image} alt={h.name} width={100} />
+                    <img
+                      src={h.image}
+                      alt={h.name}
+                      style={{ width: 100, objectFit: 'cover' }}
+                    />
                   ) : (
                     '—'
                   )}
@@ -149,8 +175,12 @@ export default function AmadeusHotelsPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+        </Box>
       )}
-    </div>
+
+      <Typography variant="caption" display="block" mt={2}>
+        Date: {checkIn.format('YYYY-MM-DD')} – {checkOut.format('YYYY-MM-DD')}
+      </Typography>
+    </Box>
   );
 }
