@@ -9,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// 自動附帶 JWT（若 localStorage 有 token）
+// 自動附帶JWT(如 localStorage 有 token)
 api.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token');
@@ -24,8 +24,8 @@ api.interceptors.request.use(
 
 // Hotel
 export const hotelService = {
-  getAll:    (params?: any)         => api.get('/hotels', { params }),
-  getById:   (id: string)           => api.get(`/hotels/${id}`),
+  getAll: (params?: any) => api.get('/amadeus/hotels', { params }),
+  getById: (id: string) => api.get(`/amadeus/hotels/${id}`),
   create:    (data: any)            => api.post('/hotels', data),
   update:    (id: string, data: any)=> api.put(`/hotels/${id}`, data),
   delete:    (id: string)           => api.delete(`/hotels/${id}`),
@@ -42,9 +42,11 @@ export const authService = {
 
 // Favorites
 export const favoriteService = {
-  getAll:               ()                => api.get('/favorites'),
-  add:    (hotelId: string)               => api.post(`/favorites/${hotelId}`),
-  remove: (hotelId: string)               => api.delete(`/favorites/${hotelId}`),
+  getAll: () => api.get('/favorites'),
+  add: (hotel: { hotelId: string; hotelName: string; cityCode: string; image?: string | null }) => 
+    api.post('/favorites', hotel),
+  remove: (hotelId: string) => api.delete(`/favorites/${hotelId}`),
+  check: (hotelId: string) => api.get(`/favorites/check/${hotelId}`),
 };
 
 // Messages
@@ -56,7 +58,8 @@ export const messageService = {
 
 // Amadeus API
 export const amadeusService = {
-  list: (city = 'PAR') => api.get('/amadeus/hotels', { params: { city } }),
+  list:  (city = 'PAR')     => api.get('/amadeus/hotels', { params: { city } }),
+  cities:(keyword: string)  => api.get('/amadeus/cities', { params: { keyword } }),
 };
 //Admin
 export const adminService = {
