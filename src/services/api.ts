@@ -1,3 +1,4 @@
+// src/services/api.ts
 import axios from 'axios';
 
 const API_URL = 'http://localhost:5000/api';
@@ -22,25 +23,62 @@ api.interceptors.request.use(
   error => Promise.reject(error)
 );
 
-// Hotel
+// Hotel Management - 完整的酒店管理API
 export const hotelService = {
-  getAll: (params?: any) => api.get('/amadeus/hotels', { params }),
-  getById: (id: string) => api.get(`/amadeus/hotels/${id}`),
-  create:    (data: any)            => api.post('/hotels', data),
-  update:    (id: string, data: any)=> api.put(`/hotels/${id}`, data),
-  delete:    (id: string)           => api.delete(`/hotels/${id}`),
+  // 獲取酒店列表（分頁）
+  getAll: (params?: {
+    page?: number;
+    limit?: number;
+    city?: string;
+    includeHidden?: boolean;
+  }) => api.get('/hotels', { params }),
+  
+  // 獲取單個酒店
+  getById: (id: string) => api.get(`/hotels/${id}`),
+  
+  // 搜尋酒店
+  search: (params: {
+    query?: string;
+    cityCode?: string;
+    page?: number;
+    limit?: number;
+  }) => api.get('/hotels/search', { params }),
+  
+  // 創建新酒店 (Operator/Admin)
+  create: (hotelData: any) => api.post('/hotels', hotelData),
+  
+  // 更新酒店資訊 (Operator/Admin)
+  update: (id: string, hotelData: any) => api.put(`/hotels/${id}`, hotelData),
+  
+  // 更新酒店狀態 (Operator/Admin)
+  updateStatus: (id: string, status: 'active' | 'hidden' | 'deleted') => 
+    api.patch(`/hotels/${id}/status`, { status }),
+  
+  // 從Amadeus導入酒店 (Operator/Admin)
+  importFromAmadeus: (data: { amadeusId: string; cityCode: string }) =>
+    api.post('/hotels/import/amadeus', data),
+  
+  // 永久刪除酒店 (Admin only)
+  delete: (id: string) => api.delete(`/hotels/${id}`),
+  
+  // 獲取統計資訊 (Operator/Admin)
+  getStats: () => api.get('/hotels/stats'),
+  
+  // 獲取所有酒店包含隱藏的 (Admin only)
+  getAllAdmin: (params?: { page?: number; limit?: number }) =>
+    api.get('/admin/hotels/all', { params })
 };
 
-// Auth
+// Auth - 認證相關API
 export const authService = {
-  login:         (credentials: { email: string; password: string }) =>
-                   api.post('/auth/login', credentials),
-  register:      (userData: any)        => api.post('/auth/register', userData),
-  getProfile:    ()                     => api.get('/auth/profile'),
-  updateProfile: (data: any)            => api.put('/auth/profile', data),
+  login: (credentials: { email: string; password: string }) =>
+    api.post('/auth/login', credentials),
+  register: (userData: any) => api.post('/auth/register', userData),
+  getProfile: () => api.get('/auth/profile'),
+  updateProfile: (data: any) => api.put('/auth/profile', data),
 };
 
-// Favorites
+// Favorites - 收藏相關API
 export const favoriteService = {
   getAll: () => api.get('/favorites'),
   add: (hotel: { hotelId: string; hotelName: string; cityCode: string; image?: string | null }) => 
@@ -49,23 +87,22 @@ export const favoriteService = {
   check: (hotelId: string) => api.get(`/favorites/check/${hotelId}`),
 };
 
-// Messages
+// Messages - 訊息相關API (預留)
 export const messageService = {
-  getAll:            ()          => api.get('/messages'),
-  send:   (data: any)            => api.post('/messages', data),
-  delete: (id: string)           => api.delete(`/messages/${id}`),
+  getAll: () => api.get('/messages'),
+  send: (data: any) => api.post('/messages', data),
+  delete: (id: string) => api.delete(`/messages/${id}`),
 };
 
-// Amadeus API
+// Amadeus API - 外部API服務（保留用於城市搜尋等功能）
 export const amadeusService = {
-  list:  (city = 'PAR')     => api.get('/amadeus/hotels', { params: { city } }),
-  cities:(keyword: string)  => api.get('/amadeus/cities', { params: { keyword } }),
+  list: (city = 'PAR') => api.get('/amadeus/hotels', { params: { city } }),
+  cities: (keyword: string) => api.get('/amadeus/cities', { params: { keyword } }),
 };
-//Admin
+
+// Admin - 管理員相關API
 export const adminService = {
-  //取得所有使用者（需要 admin JWT）
-  getUsers:        () => api.get('/admin/users'),
-  //取得所有登入紀錄（需要 admin JWT）
+  getUsers: () => api.get('/admin/users'),
   getLoginRecords: () => api.get('/admin/login-records'),
 };
 
